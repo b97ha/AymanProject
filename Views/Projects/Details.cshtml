@@ -1,0 +1,55 @@
+﻿@model AymanProject.Models.Project
+@{
+    ViewData["Title"] = "Details";
+    var lang = Context.Items["Lang"]?.ToString() ?? "en";
+    bool isArabic = lang == "ar";
+}
+
+<div class="container mt-4" dir="@(isArabic ? "rtl" : "ltr")">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">
+                @(isArabic ? "تفاصيل المشروع" : "Project Details")
+            </h3>
+        </div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">@(isArabic ? "العنوان" : "Title")</dt>
+                <dd class="col-sm-9">@Model.Title</dd>
+
+                <dt class="col-sm-3">@(isArabic ? "الموقع" : "Location")</dt>
+                <dd class="col-sm-9">@Model.Location</dd>
+
+                <dt class="col-sm-3">@(isArabic ? "الوصف" : "Description")</dt>
+                <dd class="col-sm-9">@Model.Description</dd>
+
+                <dt class="col-sm-3">@(isArabic ? "تاريخ التقديم" : "Submitted On")</dt>
+                <dd class="col-sm-9">@Model.SubmittedOn.ToString("yyyy-MM-dd")</dd>
+
+                <dt class="col-sm-3">@(isArabic ? "تاريخ الانتهاء" : "End On")</dt>
+                <dd class="col-sm-9">@Model.EndOn.ToString("yyyy-MM-dd")</dd>
+            </dl>
+        </div>
+
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" asp-route-lang="@lang" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> @(isArabic ? "رجوع" : "Back")
+                </a>
+
+                <div class="btn-group">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" asp-route-lang="@lang"
+                       class="btn btn-warning">
+                        <i class="fas fa-edit"></i> @(isArabic ? "تعديل" : "Edit")
+                    </a>
+
+                    <a asp-action="Evaluate" asp-route-id="@Model.Id" asp-route-lang="@lang"
+                       class="btn btn-success">
+                        <i class="fas fa-star"></i> @(isArabic ? "تقييم" : "Evaluate")
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

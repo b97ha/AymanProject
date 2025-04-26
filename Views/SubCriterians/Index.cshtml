@@ -1,0 +1,53 @@
+﻿@model IEnumerable<AymanProject.Models.SubCriterian>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.MainId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Text_Ar)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Text_En)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Weight)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.MainId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Text_Ar)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Text_En)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Weight)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

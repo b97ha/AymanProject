@@ -1,0 +1,55 @@
+﻿@model IEnumerable<AymanProject.Models.MainCriterian>
+
+@{
+    ViewData["Title"] = "Index";
+    var lang = Context.Items["Lang"]?.ToString() ?? "en";
+    bool isArabic = lang == "ar";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead class="table-dark">
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Text_Ar)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Text_En)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Weight)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Text_Ar)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Text_En)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Weight)
+            </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" asp-route-lang="@lang" class="btn btn-sm btn-primary">
+                        <i class="bi bi-pencil"></i> @(isArabic ? "تعديل" : "Edit")
+                    </a>
+                    <a asp-action="Details" asp-route-id="@item.Id" asp-route-lang="@lang" class="btn btn-sm btn-info text-white">
+                        <i class="bi bi-info-circle"></i> @(isArabic ? "تفاصيل" : "Details")
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" asp-route-lang="@lang" class="btn btn-sm btn-danger">
+                        <i class="bi bi-trash"></i> @(isArabic ? "حذف" : "Delete")
+                    </a>
+                </td>
+        </tr>
+}
+    </tbody>
+</table>

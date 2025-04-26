@@ -1,0 +1,55 @@
+﻿@{
+    ViewData["Title"] = "Home";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var lang = Context.Items["Lang"]?.ToString() ?? "en";
+    bool isArabic = lang == "ar";
+}
+
+<div class="container text-center mt-5" dir="@(isArabic ? "rtl" : "ltr")">
+    <img src="~/images/university_logo.png" alt="University of Karbala Logo" class="img-fluid mb-4" style="max-height: 200px;" />
+
+    <h2 class="mb-3">
+        @(isArabic ? "وزارة التعليم العالي والبحث العلمي" : "Ministry of Higher Education Scientific Research")
+    </h2>
+
+    <h3 class="mb-2">
+        @(isArabic ? "جامعة كربلاء" : "University of Karbala")
+    </h3>
+
+    <h4 class="mb-4">
+        @(isArabic ? "كلية الهندسة" : "College of Engineering")
+    </h4>
+
+    <p class="lead mb-4">
+        @(isArabic
+            ? "تقييم مشاريع البنية التحتية في محافظة كربلاء المقدسة وأثرها على تحقيق التنمية المستدامة."
+            : "Evaluation of Infrastructure projects of Holy Karbala Governorate and their impact on Sustainable Development Achievement."
+            )
+    </p>
+
+    <p class="mb-4">
+        <strong>@(isArabic ? "إعداد" : "BY")</strong><br />
+        Aymen Qahtan ABBAS
+    </p>
+
+    <p class="mb-5">
+        <strong>@(isArabic ? "المشرفون" : "Supervisors")</strong><br />
+        Prof. Dr. Mohammed Neamah Ahmed
+    </p>
+
+    <div class="d-flex justify-content-center gap-3">
+        <a href="@Url.Action("Index", "Home", new { lang = "en" })" class="btn btn-primary">
+            English
+        </a>
+        <a href="@Url.Action("Index", "Home", new { lang = "ar" })" class="btn btn-success">
+            العربية
+        </a>
+    </div>
+
+
+    <div class="mt-4">
+        <a href="@Url.Action("Index", "Projects" , new { lang = lang })" class="btn btn-outline-dark btn-lg">
+            @(isArabic ? "دخول" : "Enter")
+        </a>
+    </div>
+</div>

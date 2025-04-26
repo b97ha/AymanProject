@@ -1,0 +1,89 @@
+﻿@model AymanProject.Models.Project
+@{
+    ViewData["Title"] = "Evaluate";
+    var lang = Context.Items["Lang"]?.ToString() ?? "en";
+    bool isArabic = lang == "ar";
+}
+
+<div class="container mt-4" dir="@(isArabic ? "rtl" : "ltr")">
+    <div class="card shadow">
+        <div class="card-header bg-info text-white">
+            <h3 class="card-title mb-0">
+                @(isArabic ? "تقييم المشروع" : "Project Evaluation")
+            </h3>
+        </div>
+
+        <form asp-action="SaveEvaluation" method="post">
+            <input type="hidden" name="projectId" value="@Model.Id" />
+            <input type="hidden" name="lang" value="@lang" />
+
+            <div class="card-body">
+                @foreach (var mainCriterian in ViewBag.MainCriterians)
+                {
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input main-criterian-check"
+                                       type="checkbox"
+                                       id="main-@mainCriterian.Id"
+                                       name="selectedMainCriterians"
+                                       value="@mainCriterian.Id">
+                                <label class="form-check-label fw-bold" for="main-@mainCriterian.Id">
+                                    @(isArabic ? mainCriterian.Text_Ar : mainCriterian.Text_En)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="card-body sub-criterians" style="display: none;">
+                            @foreach (var subCriterian in mainCriterian.SubCriterians)
+                            {
+                                <div class="mb-2">
+                                    <label>@(isArabic ? subCriterian.Text_Ar : subCriterian.Text_En)</label>
+                                    <input type="hidden" name="subCriterianIds" value="@subCriterian.Id" />
+                                    <input type="range" class="form-range"
+                                           name="subEvaluations"
+                                           min="0" max="100" step="5" value="50">
+                                    <span class="evaluation-value">50%</span>
+                                </div>
+                            }
+
+                            <div class="mb-2">
+                                <label>@(isArabic ? "التقييم الرئيسي" : "Main Evaluation")</label>
+                                <input type="range" class="form-range main-evaluation"
+                                       name="mainEvaluations"
+                                       min="0" max="100" step="5" value="50">
+                                <span class="evaluation-value">50%</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="card-footer bg-light">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> @(isArabic ? "حفظ التقييم" : "Save Evaluation")
+                </button>
+                <a asp-action="Details" asp-route-id="@Model.Id" asp-route-lang="@lang"
+                   class="btn btn-secondary">
+                    @(isArabic ? "إلغاء" : "Cancel")
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Toggle sub-criterians when main checkbox is clicked
+            $('.main-criterian-check').change(function() {
+                $(this).closest('.card').find('.sub-criterians').toggle(this.checked);
+            });
+
+            // Update percentage display when range sliders change
+            $('input[type="range"]').on('input', function() {
+                $(this).next('.evaluation-value').text($(this).val() + '%');
+            });
+        });
+    </script>
+}

@@ -1,0 +1,66 @@
+﻿@model AymanProject.Models.Project
+@using AymanProject.Models
+@{
+    ViewData["Title"] = "Create";
+    var lang = Context.Items["Lang"]?.ToString() ?? "en";
+    bool isArabic = lang == "ar";
+}
+
+<div class="container mt-4" dir="@(isArabic ? "rtl" : "ltr")">
+    <h1>@(isArabic ? "إضافة مشروع" : "Create Project")</h1>
+
+    <hr />
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="Create" asp-route-lang="@lang">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Title" class="control-label"></label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Location" class="control-label"></label>
+                    <input asp-for="Location" class="form-control" />
+                    <span asp-validation-for="Location" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Description" class="control-label"></label>
+                    <input asp-for="Description" class="form-control" />
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="SubmittedOn" class="control-label"></label>
+                    <input asp-for="SubmittedOn" class="form-control" />
+                    <span asp-validation-for="SubmittedOn" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="EndOn" class="control-label"></label>
+                    <input asp-for="EndOn" class="form-control" />
+                    <span asp-validation-for="EndOn" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="@(isArabic ? "إضافة" : "Create")" class="btn btn-primary" />
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" asp-route-lang="@lang" class="btn btn-secondary">
+            @(isArabic ? "رجوع إلى القائمة" : "Back to List")
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
