@@ -3,6 +3,11 @@
     ViewData["Title"] = "Evaluate";
     var lang = Context.Items["Lang"]?.ToString() ?? "en";
     bool isArabic = lang == "ar";
+
+    // Get existing evaluations for this project
+    var project = ViewBag.Project as AymanProject.Models.Project;
+
+    var projectEvaluations = project.ProjectMainCriterians;
 }
 
 <div class="container mt-4" dir="@(isArabic ? "rtl" : "ltr")">
@@ -10,7 +15,12 @@
         <div class="card-header bg-info text-white">
             <h3 class="card-title mb-0">
                 @(isArabic ? "تقييم المشروع" : "Project Evaluation")
+                <span class="text-end">
+                    @(project.Title)
+                </span>
             </h3>
+
+
         </div>
 
         <form asp-action="SaveEvaluation" method="post">
@@ -20,6 +30,12 @@
             <div class="card-body">
                 @foreach (var mainCriterian in ViewBag.MainCriterians)
                 {
+                    // Check if this main criterian has existing evaluation
+                    var existingEvaluation = projectEvaluations?
+                    .FirstOrDefault(pmc => pmc.MainCriterianId == mainCriterian.Id);
+                    var isChecked = existingEvaluation != null;
+                    var mainEvaluationValue = existingEvaluation?.UserEvaluation ?? 50;
+
                     <div class="card mb-3">
                         <div class="card-header">
                             <div class="form-check form-switch">
@@ -27,33 +43,42 @@
                                        type="checkbox"
                                        id="main-@mainCriterian.Id"
                                        name="selectedMainCriterians"
-                                       value="@mainCriterian.Id">
+                                       value="@mainCriterian.Id"
+                                @(isChecked ? "checked" : "")>
                                 <label class="form-check-label fw-bold" for="main-@mainCriterian.Id">
                                     @(isArabic ? mainCriterian.Text_Ar : mainCriterian.Text_En)
                                 </label>
                             </div>
                         </div>
 
-                        <div class="card-body sub-criterians" style="display: none;">
+                        <div class="card-body sub-criterians" style="@(isChecked ? "" : "display: none;")">
+                            <!-- Main evaluation slider -->
+                            <div class="mb-3">
+                                <label>@(isArabic ? "التقييم الرئيسي" : "Main Evaluation")</label>
+                                <input type="range" class="form-range main-evaluation"
+                                       name="mainEvaluations"
+                                       data-main-id="@mainCriterian.Id"
+                                       min="0" max="100" step="5"
+                                       value="@mainEvaluationValue">
+                                <span class="evaluation-value">@mainEvaluationValue%</span>
+                            </div>
+
+                            <!-- Sub-criterians -->
                             @foreach (var subCriterian in mainCriterian.SubCriterians)
                             {
+                                var subEvaluationValue = existingEvaluation?.ProjectSubCriterians?
+                                .FirstOrDefault(psc => psc.SubCriterianId == subCriterian.Id)?.UserEvaluation ?? 50;
+
                                 <div class="mb-2">
                                     <label>@(isArabic ? subCriterian.Text_Ar : subCriterian.Text_En)</label>
                                     <input type="hidden" name="subCriterianIds" value="@subCriterian.Id" />
                                     <input type="range" class="form-range"
                                            name="subEvaluations"
-                                           min="0" max="100" step="5" value="50">
-                                    <span class="evaluation-value">50%</span>
+                                           min="0" max="100" step="5"
+                                           value="@subEvaluationValue">
+                                    <span class="evaluation-value">@subEvaluationValue%</span>
                                 </div>
                             }
-
-                            <div class="mb-2">
-                                <label>@(isArabic ? "التقييم الرئيسي" : "Main Evaluation")</label>
-                                <input type="range" class="form-range main-evaluation"
-                                       name="mainEvaluations"
-                                       min="0" max="100" step="5" value="50">
-                                <span class="evaluation-value">50%</span>
-                            </div>
                         </div>
                     </div>
                 }
@@ -75,6 +100,11 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
+            // Initialize existing checked items
+            $('.main-criterian-check:checked').each(function() {
+                $(this).closest('.card').find('.sub-criterians').show();
+            });
+
             // Toggle sub-criterians when main checkbox is clicked
             $('.main-criterian-check').change(function() {
                 $(this).closest('.card').find('.sub-criterians').toggle(this.checked);

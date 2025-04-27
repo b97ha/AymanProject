@@ -25,7 +25,7 @@ namespace AymanProject.Controllers
         }
 
         // GET: MainCriterians/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int? id, string lang = "en")
         {
             if (id == null)
             {
@@ -33,12 +33,15 @@ namespace AymanProject.Controllers
             }
 
             var mainCriterian = await _context.MainCriterians
+                .Include(m => m.SubCriterians) // Include sub-criterians
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (mainCriterian == null)
             {
                 return NotFound();
             }
 
+            ViewData["Lang"] = lang;
             return View(mainCriterian);
         }
 
@@ -55,6 +58,8 @@ namespace AymanProject.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Text_Ar,Text_En,Weight")] MainCriterian mainCriterian)
         {
+            ModelState.Remove("SubCriterians");
+
             if (ModelState.IsValid)
             {
                 _context.Add(mainCriterian);
@@ -91,6 +96,7 @@ namespace AymanProject.Controllers
             {
                 return NotFound();
             }
+            ModelState.Remove("SubCriterians");
 
             if (ModelState.IsValid)
             {

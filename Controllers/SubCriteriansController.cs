@@ -38,27 +38,31 @@ namespace AymanProject.Controllers
         }
 
         // GET: SubCriterians/Create
-        public IActionResult Create()
+        public IActionResult Create(int mainId)
         {
-            return View();
+            var subCriterian = new SubCriterian { MainId = mainId };
+            return View(subCriterian);
         }
 
         // POST: SubCriterians/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,MainId,Text_Ar,Text_En,Weight")] SubCriterian subCriterian)
+        public async Task<IActionResult> Create([Bind("MainId,Text_Ar,Text_En,Weight")] SubCriterian subCriterian)
         {
+            ModelState.Remove("MainCriterian");
+
             if (ModelState.IsValid)
             {
                 _context.Add(subCriterian);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Details", "MainCriterians", new { id = subCriterian.MainId });
             }
             return View(subCriterian);
         }
-
+     
         // GET: SubCriterians/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
@@ -80,12 +84,13 @@ namespace AymanProject.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,MainId,Text_Ar,Text_En,Weight")] SubCriterian subCriterian)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,MainId,Text_Ar,Text_En,Weight")] SubCriterian subCriterian, string lang = "en")
         {
             if (id != subCriterian.Id)
             {
                 return NotFound();
             }
+            ModelState.Remove("MainCriterian");
 
             if (ModelState.IsValid)
             {
@@ -105,7 +110,7 @@ namespace AymanProject.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Details", "MainCriterians", new { id = subCriterian.MainId });
             }
             return View(subCriterian);
         }
@@ -140,7 +145,7 @@ namespace AymanProject.Controllers
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Details", "MainCriterians", new { id = subCriterian.MainId });
         }
 
         private bool SubCriterianExists(int id)

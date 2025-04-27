@@ -1,48 +1,67 @@
 ﻿@model AymanProject.Models.SubCriterian
-
 @{
     ViewData["Title"] = "Create";
+    var lang = Context.Items["Lang"]?.ToString() ?? "en";
+    bool isArabic = lang == "ar";
+    var mainId = Context.Request.Query["mainId"]; // Get mainId from query string
 }
 
-<h1>Create</h1>
+<div class="container mt-4" dir="@(isArabic ? "rtl" : "ltr")">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">
+                @(isArabic ? "إضافة معيار فرعي جديد" : "Create New Sub Criterian")
+            </h3>
+        </div>
 
-<h4>SubCriterian</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="MainId" class="control-label"></label>
-                <input asp-for="MainId" class="form-control" />
-                <span asp-validation-for="MainId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Text_Ar" class="control-label"></label>
-                <input asp-for="Text_Ar" class="form-control" />
-                <span asp-validation-for="Text_Ar" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Text_En" class="control-label"></label>
-                <input asp-for="Text_En" class="form-control" />
-                <span asp-validation-for="Text_En" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Weight" class="control-label"></label>
-                <input asp-for="Weight" class="form-control" />
-                <span asp-validation-for="Weight" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+        <div class="card-body">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <!-- Hidden MainId field with value from query string -->
+                <input type="hidden" asp-for="MainId" value="@mainId" />
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="control-label">@(isArabic ? "النص (عربي)" : "Text (Arabic)")</label>
+                            <input asp-for="Text_Ar" class="form-control" />
+                            <span asp-validation-for="Text_Ar" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="control-label">@(isArabic ? "النص (إنجليزي)" : "Text (English)")</label>
+                            <input asp-for="Text_En" class="form-control" />
+                            <span asp-validation-for="Text_En" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="control-label">@(isArabic ? "الوزن" : "Weight")</label>
+                            <input asp-for="Weight" class="form-control" min="0" max="100" />
+                            <span asp-validation-for="Weight" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mt-4">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> @(isArabic ? "حفظ" : "Save")
+                    </button>
+                    <a asp-action="Details" asp-controller="MainCriterians"
+                       asp-route-id="@mainId" asp-route-lang="@lang"
+                       class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> @(isArabic ? "رجوع" : "Back")
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
