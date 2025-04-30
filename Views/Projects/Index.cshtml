@@ -48,6 +48,10 @@
                         <a asp-action="Delete" asp-route-id="@item.Id" asp-route-lang="@lang" class="btn btn-sm btn-danger">
                             <i class="bi bi-trash"></i> @(isArabic ? "حذف" : "Delete")
                         </a>
+                        <a asp-action="EvaluationSummary" asp-route-id="@item.Id" asp-route-lang="@lang"
+                           class="btn btn-primary">
+                            <i class="fas fa-chart-bar"></i> @(isArabic ? "التقييم" : "Evaluation")
+                        </a>
                     </td>
                 </tr>
             }

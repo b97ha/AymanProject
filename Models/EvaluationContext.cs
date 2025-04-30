@@ -134,6 +134,18 @@ namespace AymanProject.Models
         public DateTime EndOn { get; set; }
 
         public ICollection<ProjectMainCriterian> ProjectMainCriterians { get; set; }
+
+
+        public double? TotalScore
+        {
+            get
+            {
+                if (ProjectMainCriterians == null || !ProjectMainCriterians.Any())
+                    return null;
+
+                return ProjectMainCriterians.Sum(pmc => pmc.CalculateScore());
+            }
+        }
     }
 
     public class ProjectMainCriterian
@@ -148,7 +160,7 @@ namespace AymanProject.Models
 
         public double CalculateScore()
         {
-            double score = (MainCriterian.Weight * UserEvaluation) / 100.0;
+            double score = 0; // (MainCriterian.Weight * UserEvaluation) / 100.0;
             if (ProjectSubCriterians != null && ProjectSubCriterians.Any())
             {
                 foreach (var sub in ProjectSubCriterians)

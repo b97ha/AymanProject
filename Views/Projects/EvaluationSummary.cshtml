@@ -1,0 +1,80 @@
+﻿@model AymanProject.Models.Project
+@{
+    ViewData["Title"] = "Evaluation Summary";
+    var lang = Context.Items["Lang"]?.ToString() ?? "en";
+    bool isArabic = lang == "ar";
+}
+
+<div class="container mt-4" dir="@(isArabic ? "rtl" : "ltr")">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">
+                @(isArabic ? "ملخص التقييم للمشروع" : "Project Evaluation Summary") - @Model.Title
+            </h3>
+        </div>
+        
+        <div class="card-body">
+            @if (Model.ProjectMainCriterians?.Any() == true)
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>@(isArabic ? "المعيار الرئيسي" : "Main Criterian")</th>
+                                <th>@(isArabic ? "الوزن" : "Weight")</th>
+                                <th>@(isArabic ? "التقييم" : "Evaluation")</th>
+                                <th>@(isArabic ? "النقاط" : "Points")</th>
+                                <th>@(isArabic ? "المعايير الفرعية" : "Sub Criterians")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var pmc in Model.ProjectMainCriterians)
+                            {
+                                <tr>
+                                    <td>@(isArabic ? pmc.MainCriterian.Text_Ar : pmc.MainCriterian.Text_En)</td>
+                                    <td>@pmc.MainCriterian.Weight%</td>
+                                    <td>@pmc.UserEvaluation%</td>
+                                    <td>@((pmc.MainCriterian.Weight * pmc.UserEvaluation) / 100.0)</td>
+                                    <td>
+                                        @if (pmc.ProjectSubCriterians?.Any() == true)
+                                        {
+                                            <table class="table table-sm mb-0">
+                                                @foreach (var psc in pmc.ProjectSubCriterians)
+                                                {
+                                                    <tr>
+                                                        <td>@(isArabic ? psc.SubCriterian.Text_Ar : psc.SubCriterian.Text_En)</td>
+                                                        <td>@psc.SubCriterian.Weight%</td>
+                                                        <td>@psc.UserEvaluation%</td>
+                                                        <td>@(((psc.SubCriterian.Weight * psc.UserEvaluation) / 100.0).ToString("0.2"))</td>
+                                                    </tr>
+                                                }
+                                            </table>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="font-weight-bold">
+                            <tr>
+                                <td colspan="3" class="text-end">@(isArabic ? "المجموع الكلي" : "Total Score")</td>
+                                <td colspan="2">@Model.TotalScore?.ToString("0.0")%</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    @(isArabic ? "لا توجد تقييمات لهذا المشروع بعد" : "No evaluations found for this project")
+                </div>
+            }
+        </div>
+        
+        <div class="card-footer">
+            <a asp-action="Index" asp-route-lang="@lang" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> @(isArabic ? "رجوع" : "Back")
+            </a>
+        </div>
+    </div>
+</div>

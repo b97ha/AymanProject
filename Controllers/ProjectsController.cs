@@ -17,7 +17,12 @@ namespace AymanProject.Controllers
         public async Task<IActionResult> Index(string lang = "en")
         {
             ViewData["Lang"] = lang;
-            return View(await _context.Projects.ToListAsync());
+
+            var projects = await _context.Projects
+                                        .Include(p => p.ProjectMainCriterians)
+                                        .ToListAsync();
+
+            return View(projects);
         }
 
 
@@ -216,6 +221,26 @@ namespace AymanProject.Controllers
 
             await _context.SaveChangesAsync();
             return RedirectToAction("Details", new { id = projectId, lang });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EvaluationSummary(int id, string lang = "en")
+        {
+            var project = await _context.Projects
+                .Include(p => p.ProjectMainCriterians)
+                    .ThenInclude(pmc => pmc.MainCriterian)
+                .Include(p => p.ProjectMainCriterians)
+                    .ThenInclude(pmc => pmc.ProjectSubCriterians)
+                        .ThenInclude(psc => psc.SubCriterian)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (project == null)
+            {
+                return NotFound();
+            }
+
+            ViewData["Lang"] = lang;
+            return View(project);
         }
     }
 
