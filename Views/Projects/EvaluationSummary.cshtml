@@ -1,80 +1,387 @@
 ﻿@model AymanProject.Models.Project
+@using AymanProject.Models
+
 @{
     ViewData["Title"] = "Evaluation Summary";
-    var lang = Context.Items["Lang"]?.ToString() ?? "en";
-    bool isArabic = lang == "ar";
+    var lang = ViewData["Lang"]?.ToString() ?? "en";
+    bool isArabic = (bool)(ViewData["IsArabic"] ?? false);
 }
 
 <div class="container mt-4" dir="@(isArabic ? "rtl" : "ltr")">
     <div class="card shadow">
         <div class="card-header bg-primary text-white">
-            <h3 class="card-title mb-0">
-                @(isArabic ? "ملخص التقييم للمشروع" : "Project Evaluation Summary") - @Model.Title
-            </h3>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="card-title mb-0">
+                        @TranslationHelper.Translate("EvaluationSummary", lang)
+                    </h3>
+                    <small class="text-light">
+                        <i class="bi bi-folder"></i> @Model.Title
+                    </small>
+                </div>
+                
+                <!-- Language Switcher -->
+                <div class="btn-group">
+                    <a href="?lang=en" class="btn btn-sm @(lang == "en" ? "btn-light" : "btn-outline-light")">
+                        @TranslationHelper.Translate("English", lang)
+                    </a>
+                    <a href="?lang=ar" class="btn btn-sm @(lang == "ar" ? "btn-light" : "btn-outline-light")">
+                        @TranslationHelper.Translate("Arabic", lang)
+                    </a>
+                </div>
+            </div>
         </div>
         
         <div class="card-body">
             @if (Model.ProjectMainCriterians?.Any() == true)
             {
+                <!-- Overall Score Card -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="card bg-gradient-primary text-white">
+                            <div class="card-body text-center">
+                                <h2 class="display-4 mb-2">@Model.TotalScore?.ToString("0.1")%</h2>
+                                <h5 class="mb-0">@(isArabic ? "النتيجة الإجمالية" : "Overall Score")</h5>
+                                <small class="opacity-75">
+                                    @(isArabic ? "بناءً على " : "Based on ")@Model.ProjectMainCriterians.Count() 
+                                    @(isArabic ? "معيار رئيسي" : "main criteria")
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-calculator"></i>
+                                    @(isArabic ? "طريقة الحساب" : "Calculation Method")
+                                </h6>
+                                <small class="text-muted">
+                                    @if (isArabic)
+                                    {
+                                        <text>
+                                        لكل معيار فرعي:<br>
+                                        (وزن المعيار الرئيسي × تقييم المعيار الرئيسي) × (وزن المعيار الفرعي × تقييم المعيار الفرعي)
+                                        </text>
+                                    }
+                                    else
+                                    {
+                                        <text>
+                                        For each sub-criterion:<br>
+                                        (Main Weight × Main Evaluation) × (Sub Weight × Sub Evaluation)
+                                        </text>
+                                    }
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Evaluation Table -->
                 <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="thead-light">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
                             <tr>
-                                <th>@(isArabic ? "المعيار الرئيسي" : "Main Criterian")</th>
-                                <th>@(isArabic ? "الوزن" : "Weight")</th>
-                                <th>@(isArabic ? "التقييم" : "Evaluation")</th>
-                                <th>@(isArabic ? "النقاط" : "Points")</th>
-                                <th>@(isArabic ? "المعايير الفرعية" : "Sub Criterians")</th>
+                                <th width="35%">@(isArabic ? "المعيار الرئيسي" : "Main Criterion")</th>
+                                <th width="10%" class="text-center">@(isArabic ? "الوزن" : "Weight")</th>
+                                <th width="10%" class="text-center">@(isArabic ? "التقييم" : "Evaluation")</th>
+                                <th width="10%" class="text-center">@(isArabic ? "النقاط" : "Points")</th>
+                                <th width="35%">@(isArabic ? "المعايير الفرعية" : "Sub Criteria")</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var pmc in Model.ProjectMainCriterians)
+                            @foreach (var pmc in Model.ProjectMainCriterians.OrderBy(p => p.MainCriterian.Id))
                             {
-                                <tr>
-                                    <td>@(isArabic ? pmc.MainCriterian.Text_Ar : pmc.MainCriterian.Text_En)</td>
-                                    <td>@pmc.MainCriterian.Weight%</td>
-                                    <td>@pmc.UserEvaluation%</td>
-                                    <td>@((pmc.MainCriterian.Weight * pmc.UserEvaluation) / 100.0)</td>
+                                <tr class="table-light">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-bookmark-fill text-primary me-2"></i>
+                                            <div>
+                                                <strong>@(isArabic ? pmc.MainCriterian.Text_Ar : pmc.MainCriterian.Text_En)</strong>
+                                                <br>
+                                                <small class="text-muted">SDG @pmc.MainCriterian.Id</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary">@((pmc.MainCriterian.Weight * 100).ToString("0.1"))%</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-info" role="progressbar" 
+                                                 style="width: @pmc.UserEvaluation%" 
+                                                 aria-valuenow="@pmc.UserEvaluation" 
+                                                 aria-valuemin="0" aria-valuemax="100">
+                                                @pmc.UserEvaluation%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success fs-6">
+                                            @pmc.CalculateScore().ToString("0.000")
+                                        </span>
+                                        <small class="d-block text-muted">
+                                            (Calculated Score)
+                                        </small>
+                                    </td>
                                     <td>
                                         @if (pmc.ProjectSubCriterians?.Any() == true)
                                         {
-                                            <table class="table table-sm mb-0">
-                                                @foreach (var psc in pmc.ProjectSubCriterians)
-                                                {
-                                                    <tr>
-                                                        <td>@(isArabic ? psc.SubCriterian.Text_Ar : psc.SubCriterian.Text_En)</td>
-                                                        <td>@psc.SubCriterian.Weight%</td>
-                                                        <td>@psc.UserEvaluation%</td>
-                                                        <td>@(((psc.SubCriterian.Weight * psc.UserEvaluation) / 100.0).ToString("0.2"))</td>
-                                                    </tr>
-                                                }
-                                            </table>
+                                            <div class="accordion accordion-flush" id="accordion-@pmc.Id">
+                                                <div class="accordion-item border-0">
+                                                    <h2 class="accordion-header">
+                                                        <button class="accordion-button collapsed py-2" type="button" 
+                                                                data-bs-toggle="collapse" 
+                                                                data-bs-target="#collapse-@pmc.Id">
+                                                            <small>
+                                                                <i class="bi bi-list-ul me-2"></i>
+                                                                @pmc.ProjectSubCriterians.Count() @(isArabic ? "معيار فرعي" : "sub criteria")
+                                                            </small>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="collapse-@pmc.Id" class="accordion-collapse collapse" 
+                                                         data-bs-parent="#accordion-@pmc.Id">
+                                                        <div class="accordion-body p-2">
+                                                            <table class="table table-sm mb-0">
+                                                                @foreach (var psc in pmc.ProjectSubCriterians.OrderBy(p => p.SubCriterian.Id))
+                                                                {
+                                                                    <tr>
+                                                                        <td width="50%">
+                                                                            <small>
+                                                                                <i class="bi bi-chevron-right text-muted"></i>
+                                                                                @(isArabic ? psc.SubCriterian.Text_Ar : psc.SubCriterian.Text_En)
+                                                                            </small>
+                                                                        </td>
+                                                                        <td width="20%" class="text-center">
+                                                                            <small class="text-muted">
+                                                                                @((psc.SubCriterian.Weight * 100).ToString("0.1"))%
+                                                                            </small>
+                                                                        </td>
+                                                                        <td width="20%" class="text-center">
+                                                                            <small class="badge bg-primary">
+                                                                                @psc.UserEvaluation%
+                                                                            </small>
+                                                                        </td>
+                                                                        <td width="10%" class="text-center">
+                                                                            <small class="text-success fw-bold">
+                                                                                @(((pmc.MainCriterian.Weight * pmc.UserEvaluation) * (psc.SubCriterian.Weight * psc.UserEvaluation) / 100.0).ToString("0.000"))
+                                                                            </small>
+                                                                            <div class="d-block">
+                                                                                <small class="text-muted" style="font-size: 0.7em;">
+                                                                                    (@(pmc.MainCriterian.Weight.ToString("0.000"))×@pmc.UserEvaluation%) × (@(psc.SubCriterian.Weight.ToString("0.000"))×@psc.UserEvaluation%)
+                                                                                </small>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                }
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-muted">
+                                                <i class="bi bi-dash-circle"></i>
+                                                @(isArabic ? "لا توجد معايير فرعية" : "No sub criteria")
+                                            </small>
                                         }
                                     </td>
                                 </tr>
                             }
                         </tbody>
-                        <tfoot class="font-weight-bold">
-                            <tr>
-                                <td colspan="3" class="text-end">@(isArabic ? "المجموع الكلي" : "Total Score")</td>
-                                <td colspan="2">@Model.TotalScore?.ToString("0.0")%</td>
+                        <tfoot class="table-success">
+                            <tr class="fw-bold">
+                                <td colspan="3" class="text-end fs-5">
+                                    <i class="bi bi-calculator"></i>
+                                    @(isArabic ? "المجموع الكلي" : "Total Score")
+                                </td>
+                                <td colspan="2" class="text-center fs-4 text-success">
+                                    @Model.TotalScore?.ToString("0.1")%
+                                </td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
+
+                <!-- Charts Section -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-pie-chart"></i>
+                                    @(isArabic ? "توزيع النقاط" : "Score Distribution")
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="scoreChart" width="400" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-bar-chart"></i>
+                                    @(isArabic ? "مقارنة التقييمات" : "Evaluation Comparison")
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="comparisonChart" width="400" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             }
             else
             {
-                <div class="alert alert-warning">
-                    @(isArabic ? "لا توجد تقييمات لهذا المشروع بعد" : "No evaluations found for this project")
+                <div class="alert alert-warning text-center">
+                    <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+                    <h4 class="mt-3">@(isArabic ? "لا توجد تقييمات" : "No Evaluations Found")</h4>
+                    <p class="mb-3">
+                        @(isArabic ? "لا توجد تقييمات لهذا المشروع بعد." : "No evaluations found for this project yet.")
+                    </p>
+                    <a asp-action="Evaluate" asp-route-id="@Model.Id" class="btn btn-primary">
+                        <i class="bi bi-star"></i> @(isArabic ? "تقييم الآن" : "Evaluate Now")
+                    </a>
                 </div>
             }
         </div>
         
-        <div class="card-footer">
-            <a asp-action="Index" asp-route-lang="@lang" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> @(isArabic ? "رجوع" : "Back")
-            </a>
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between">
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> @(isArabic ? "رجوع" : "Back")
+                </a>
+                
+                @if (Model.ProjectMainCriterians?.Any() == true)
+                {
+                    <div class="btn-group">
+                        <a asp-action="Evaluate" asp-route-id="@Model.Id" class="btn btn-warning">
+                            <i class="bi bi-pencil"></i> @(isArabic ? "تعديل التقييم" : "Edit Evaluation")
+                        </a>
+                        <button type="button" class="btn btn-success" onclick="window.print()">
+                            <i class="bi bi-printer"></i> @(isArabic ? "طباعة" : "Print")
+                        </button>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 </div>
+
+@if (Model.ProjectMainCriterians?.Any() == true)
+{
+    <!-- Chart Data Script -->
+    <script>
+        window.chartData = {
+            labels: @Html.Raw(Json.Serialize(Model.ProjectMainCriterians.Select(pmc => (isArabic ? pmc.MainCriterian.Text_Ar : pmc.MainCriterian.Text_En).Length > 30 ? (isArabic ? pmc.MainCriterian.Text_Ar : pmc.MainCriterian.Text_En).Substring(0, 30) + "..." : (isArabic ? pmc.MainCriterian.Text_Ar : pmc.MainCriterian.Text_En)).ToArray())),
+            evaluations: @Html.Raw(Json.Serialize(Model.ProjectMainCriterians.Select(pmc => pmc.UserEvaluation).ToArray())),
+            scores: @Html.Raw(Json.Serialize(Model.ProjectMainCriterians.Select(pmc => Math.Round(pmc.CalculateScore(), 1)).ToArray())),
+            isArabic: @Json.Serialize(isArabic)
+        };
+    </script>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            if (typeof window.chartData !== 'undefined') {
+                // Score Distribution Pie Chart
+                var ctx1 = document.getElementById('scoreChart').getContext('2d');
+                new Chart(ctx1, {
+                    type: 'doughnut',
+                    data: {
+                        labels: window.chartData.labels,
+                        datasets: [{
+                            data: window.chartData.scores,
+                            backgroundColor: [
+                                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+                                '#9966FF', '#FF9F40', '#FF6B6B', '#4ECDC4'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+                
+                // Evaluation Comparison Bar Chart
+                var ctx2 = document.getElementById('comparisonChart').getContext('2d');
+                new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: window.chartData.labels,
+                        datasets: [{
+                            label: window.chartData.isArabic ? 'التقييم %' : 'Evaluation %',
+                            data: window.chartData.evaluations,
+                            backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        }
+        
+        .accordion-button:not(.collapsed) {
+            background-color: transparent;
+            box-shadow: none;
+        }
+        
+        .accordion-button:focus {
+            box-shadow: none;
+        }
+        
+        @@media print {
+            .card-footer, .btn, .accordion-button {
+                display: none !important;
+            }
+            
+            .accordion-collapse {
+                display: block !important;
+                height: auto !important;
+            }
+        }
+        
+        @if (isArabic) {
+            <text>
+            .btn-group {
+                direction: ltr;
+            }
+            </text>
+        }
+    </style>
+}

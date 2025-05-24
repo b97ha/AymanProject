@@ -1,60 +1,152 @@
 ﻿@model IEnumerable<AymanProject.Models.Project>
+@using AymanProject.Models
 
 @{
     ViewData["Title"] = "Projects";
-
-    var lang = Context.Items["Lang"]?.ToString() ?? "en";
-    bool isArabic = lang == "ar";
+    var lang = ViewData["Lang"]?.ToString() ?? "en";
+    bool isArabic = (bool)(ViewData["IsArabic"] ?? false);
 }
 
-<div class="container mt-5" dir="@(isArabic ? "rtl" : "ltr")">
-    <h1 class="mb-4 text-center">
-        @(isArabic ? "قائمة المشاريع" : "Project List")
-    </h1>
+<div class="container mt-4" dir="@(isArabic ? "rtl" : "ltr")">
+    <!-- Success/Error Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
-    <div class="mb-3 text-end">
-        <a asp-action="Create" asp-route-lang="@lang" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> @(isArabic ? "إضافة مشروع" : "Create New Project")
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@TranslationHelper.Translate("ProjectsList", lang)</h1>
+
+        <!-- Language Switcher -->
+        <div class="btn-group">
+            <form asp-action="SetLanguage" asp-controller="Home" method="post" style="display: inline;">
+                <input type="hidden" name="lang" value="en" />
+                <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                <button type="submit" class="btn btn-sm @(lang == "en" ? "btn-primary" : "btn-outline-primary")">
+                    @TranslationHelper.Translate("English", lang)
+                </button>
+            </form>
+            <form asp-action="SetLanguage" asp-controller="Home" method="post" style="display: inline;">
+                <input type="hidden" name="lang" value="ar" />
+                <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                <button type="submit" class="btn btn-sm @(lang == "ar" ? "btn-success" : "btn-outline-success")">
+                    @TranslationHelper.Translate("Arabic", lang)
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <a asp-action="Create" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> @TranslationHelper.Translate("CreateNewProject", lang)
         </a>
     </div>
 
-    <table class="table table-striped table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th>@(isArabic ? "العنوان" : "Title")</th>
-                <th>@(isArabic ? "الموقع" : "Location")</th>
-                <th>@(isArabic ? "الوصف" : "Description")</th>
-                <th>@(isArabic ? "تاريخ البدء" : "Submitted On")</th>
-                <th>@(isArabic ? "تاريخ الانتهاء" : "End On")</th>
-                <th>@(isArabic ? "العمليات" : "Actions")</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.Title</td>
-                    <td>@item.Location</td>
-                    <td>@item.Description</td>
-                    <td>@item.SubmittedOn.ToShortDateString()</td>
-                    <td>@item.EndOn.ToShortDateString()</td>
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@item.Id" asp-route-lang="@lang" class="btn btn-sm btn-primary">
-                            <i class="bi bi-pencil"></i> @(isArabic ? "تعديل" : "Edit")
-                        </a>
-                        <a asp-action="Details" asp-route-id="@item.Id" asp-route-lang="@lang" class="btn btn-sm btn-info text-white">
-                            <i class="bi bi-info-circle"></i> @(isArabic ? "تفاصيل" : "Details")
-                        </a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" asp-route-lang="@lang" class="btn btn-sm btn-danger">
-                            <i class="bi bi-trash"></i> @(isArabic ? "حذف" : "Delete")
-                        </a>
-                        <a asp-action="EvaluationSummary" asp-route-id="@item.Id" asp-route-lang="@lang"
-                           class="btn btn-primary">
-                            <i class="fas fa-chart-bar"></i> @(isArabic ? "التقييم" : "Evaluation")
-                        </a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="card shadow">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>@TranslationHelper.Translate("Title", lang)</th>
+                        <th>@TranslationHelper.Translate("Location", lang)</th>
+                        <th>@TranslationHelper.Translate("Description", lang)</th>
+                        <th>@TranslationHelper.Translate("SubmittedOn", lang)</th>
+                        <th>@TranslationHelper.Translate("EndOn", lang)</th>
+                        <th class="text-center">@TranslationHelper.Translate("Actions", lang)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@item.Title</strong>
+                                @if (item.TotalScore.HasValue)
+                                {
+                                    <br>
+
+                                    <small class="text-success">
+                                        <i class="bi bi-star-fill"></i> @item.TotalScore.Value.ToString("0.0")%
+                                    </small>
+                                }
+                            </td>
+                            <td>@item.Location</td>
+                            <td>
+                                @if (item.Description.Length > 50)
+                                {
+                                    @(item.Description.Substring(0, 50) + "...")
+                                }
+                                else
+                                {
+                                    @item.Description
+                                }
+                            </td>
+                            <td>@item.SubmittedOn.ToString("yyyy-MM-dd")</td>
+                            <td>@item.EndOn.ToString("yyyy-MM-dd")</td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Edit" asp-route-id="@item.Id"
+                                       class="btn btn-outline-primary" title="@TranslationHelper.Translate("Edit", lang)">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="Details" asp-route-id="@item.Id"
+                                       class="btn btn-outline-info" title="@TranslationHelper.Translate("Details", lang)">
+                                        <i class="bi bi-info-circle"></i>
+                                    </a>
+                                    <a asp-action="Evaluate" asp-route-id="@item.Id"
+                                       class="btn btn-outline-success" title="@TranslationHelper.Translate("Evaluate", lang)">
+                                        <i class="bi bi-star"></i>
+                                    </a>
+                                    <a asp-action="EvaluationSummary" asp-route-id="@item.Id"
+                                       class="btn btn-outline-warning" title="@TranslationHelper.Translate("EvaluationSummary", lang)">
+                                        <i class="bi bi-graph-up"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id"
+                                       class="btn btn-outline-danger" title="@TranslationHelper.Translate("Delete", lang)">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle"></i> @TranslationHelper.Translate("NoItemsFound", lang)
+        </div>
+    }
+
+    <!-- Back to Home -->
+    <div class="mt-3">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-house"></i> @TranslationHelper.Translate("Home", lang)
+        </a>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+        });
+    </script>
+}

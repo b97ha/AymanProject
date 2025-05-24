@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
 namespace AymanProject.Models
 {
@@ -124,18 +126,40 @@ namespace AymanProject.Models
         public MainCriterian MainCriterian { get; set; }
     }
 
+    // Also update the Project class TotalScore property:
     public class Project
     {
+        [Key]
         public int Id { get; set; }
+
+        [Required(ErrorMessage = "Title is required")]
+        [StringLength(500, ErrorMessage = "Title cannot exceed 500 characters")]
+        [Display(Name = "Title")]
         public string Title { get; set; }
+
+        [Required(ErrorMessage = "Location is required")]
+        [StringLength(200, ErrorMessage = "Location cannot exceed 200 characters")]
+        [Display(Name = "Location")]
         public string Location { get; set; }
+
+        [Required(ErrorMessage = "Description is required")]
+        [StringLength(2000, ErrorMessage = "Description cannot exceed 2000 characters")]
+        [Display(Name = "Description")]
         public string Description { get; set; }
+
+        [Required(ErrorMessage = "Submitted date is required")]
+        [DataType(DataType.Date)]
+        [Display(Name = "Submitted On")]
         public DateTime SubmittedOn { get; set; }
+
+        [Required(ErrorMessage = "End date is required")]
+        [DataType(DataType.Date)]
+        [Display(Name = "End On")]
         public DateTime EndOn { get; set; }
 
-        public ICollection<ProjectMainCriterian> ProjectMainCriterians { get; set; }
+        public virtual ICollection<ProjectMainCriterian> ProjectMainCriterians { get; set; } = new List<ProjectMainCriterian>();
 
-
+        [NotMapped]
         public double? TotalScore
         {
             get
@@ -143,34 +167,65 @@ namespace AymanProject.Models
                 if (ProjectMainCriterians == null || !ProjectMainCriterians.Any())
                     return null;
 
-                return ProjectMainCriterians.Sum(pmc => pmc.CalculateScore());
+                // Sum all the calculated scores (already in percentage form 0-100)
+                var totalScore = ProjectMainCriterians.Sum(pmc => pmc.CalculateScore());
+                return totalScore; // NO multiplication by 100 - already a percentage
             }
         }
     }
 
     public class ProjectMainCriterian
     {
+        [Key]
         public int Id { get; set; }
+
+        [Required]
         public int ProjectId { get; set; }
-        public Project Project { get; set; }
+
+        [Required]
         public int MainCriterianId { get; set; }
-        public MainCriterian MainCriterian { get; set; }
+
+        [Required]
+        [Range(0.0, 100.0, ErrorMessage = "Evaluation must be between 0 and 100")]
+        [Display(Name = "User Evaluation")]
         public double UserEvaluation { get; set; }
-        public ICollection<ProjectSubCriterian> ProjectSubCriterians { get; set; }
+
+        [ForeignKey("ProjectId")]
+        public virtual Project Project { get; set; }
+
+        [ForeignKey("MainCriterianId")]
+        public virtual MainCriterian MainCriterian { get; set; }
+
+        public virtual ICollection<ProjectSubCriterian> ProjectSubCriterians { get; set; } = new List<ProjectSubCriterian>();
 
         public double CalculateScore()
         {
-            double score = 0; // (MainCriterian.Weight * UserEvaluation) / 100.0;
+            double score = 0;
+
             if (ProjectSubCriterians != null && ProjectSubCriterians.Any())
             {
+                // New calculation method:
+                // (main weight * main user input) * (sub weight * sub user input) / 100
+                // Result will be a percentage value (0-100 range)
                 foreach (var sub in ProjectSubCriterians)
                 {
-                    score += (sub.SubCriterian.Weight * sub.UserEvaluation) / 100.0;
+                    var mainPart = MainCriterian.Weight * UserEvaluation;
+                    var subPart = sub.SubCriterian.Weight * sub.UserEvaluation;
+                    score += (mainPart * subPart) / 100.0; // Divide by 100, not 10000
                 }
             }
+            else
+            {
+                // If no sub-criteria, use main criterion only
+                score = MainCriterian.Weight * UserEvaluation;
+            }
+
             return score;
         }
     }
+
+
+
 
     public class ProjectSubCriterian
     {
