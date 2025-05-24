@@ -126,7 +126,63 @@ namespace AymanProject.Models
         public MainCriterian MainCriterian { get; set; }
     }
 
-    // Also update the Project class TotalScore property:
+    // Replace ONLY these two classes in your Models/EvaluationContext.cs:
+
+    public class ProjectMainCriterian
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public int ProjectId { get; set; }
+
+        [Required]
+        public int MainCriterianId { get; set; }
+
+        [Required]
+        [Range(0.0, 100.0, ErrorMessage = "Evaluation must be between 0 and 100")]
+        [Display(Name = "User Evaluation")]
+        public double UserEvaluation { get; set; }
+
+        [ForeignKey("ProjectId")]
+        public virtual Project Project { get; set; }
+
+        [ForeignKey("MainCriterianId")]
+        public virtual MainCriterian MainCriterian { get; set; }
+
+        public virtual ICollection<ProjectSubCriterian> ProjectSubCriterians { get; set; } = new List<ProjectSubCriterian>();
+        public double CalculateScore()
+        {
+            double totalScore = 0;
+
+            if (ProjectSubCriterians != null && ProjectSubCriterians.Any())
+            {
+                // Sum all sub-criterion scores
+                foreach (var sub in ProjectSubCriterians)
+                {
+                    // Verified formula: (main_weight * main_eval) * (sub_weight * sub_eval) / 100
+                    double mainWeight = MainCriterian.Weight;      // Should be decimal like 0.269
+                    double mainEval = UserEvaluation;              // Should be percentage like 100
+                    double subWeight = sub.SubCriterian.Weight;    // Should be decimal like 0.331
+                    double subEval = sub.UserEvaluation;          // Should be percentage like 100
+
+                    double subScore = (mainWeight * mainEval) * (subWeight * subEval) / 100.0;
+                    totalScore += subScore;
+
+                    // Debug output (remove in production)
+                    Console.WriteLine($"Sub-criterion: ({mainWeight:F3} × {mainEval}) × ({subWeight:F3} × {subEval}) ÷ 100 = {subScore:F3}");
+                }
+            }
+            else
+            {
+                // No sub-criteria: just main weight × main evaluation
+                totalScore = MainCriterian.Weight * UserEvaluation;
+            }
+
+            return Math.Round(totalScore, 3); // Round to avoid floating point precision issues
+        }
+    }
+
     public class Project
     {
         [Key]
@@ -167,64 +223,43 @@ namespace AymanProject.Models
                 if (ProjectMainCriterians == null || !ProjectMainCriterians.Any())
                     return null;
 
-                // Sum all the calculated scores (already in percentage form 0-100)
-                var totalScore = ProjectMainCriterians.Sum(pmc => pmc.CalculateScore());
-                return totalScore; // NO multiplication by 100 - already a percentage
-            }
-        }
-    }
+                // Calculate the sum of all main criteria scores
+                double totalScore = 0;
 
-    public class ProjectMainCriterian
-    {
-        [Key]
-        public int Id { get; set; }
-
-        [Required]
-        public int ProjectId { get; set; }
-
-        [Required]
-        public int MainCriterianId { get; set; }
-
-        [Required]
-        [Range(0.0, 100.0, ErrorMessage = "Evaluation must be between 0 and 100")]
-        [Display(Name = "User Evaluation")]
-        public double UserEvaluation { get; set; }
-
-        [ForeignKey("ProjectId")]
-        public virtual Project Project { get; set; }
-
-        [ForeignKey("MainCriterianId")]
-        public virtual MainCriterian MainCriterian { get; set; }
-
-        public virtual ICollection<ProjectSubCriterian> ProjectSubCriterians { get; set; } = new List<ProjectSubCriterian>();
-
-        public double CalculateScore()
-        {
-            double score = 0;
-
-            if (ProjectSubCriterians != null && ProjectSubCriterians.Any())
-            {
-                // New calculation method:
-                // (main weight * main user input) * (sub weight * sub user input) / 100
-                // Result will be a percentage value (0-100 range)
-                foreach (var sub in ProjectSubCriterians)
+                foreach (var pmc in ProjectMainCriterians)
                 {
-                    var mainPart = MainCriterian.Weight * UserEvaluation;
-                    var subPart = sub.SubCriterian.Weight * sub.UserEvaluation;
-                    score += (mainPart * subPart) / 100.0; // Divide by 100, not 10000
+                    totalScore += pmc.CalculateScore();
                 }
-            }
-            else
-            {
-                // If no sub-criteria, use main criterion only
-                score = MainCriterian.Weight * UserEvaluation;
-            }
 
-            return score;
+                // IMPORTANT: Return the actual calculated score, not multiplied by anything
+                return Math.Round(totalScore, 3); // Round to 3 decimal places for precision
+            }
+        }
+
+        // Add a debug property to help troubleshoot
+        [NotMapped]
+        public string TotalScoreDebug
+        {
+            get
+            {
+                if (ProjectMainCriterians == null || !ProjectMainCriterians.Any())
+                    return "No criteria found";
+
+                var debug = new System.Text.StringBuilder();
+                double total = 0;
+
+                foreach (var pmc in ProjectMainCriterians)
+                {
+                    var score = pmc.CalculateScore();
+                    debug.AppendLine($"Main Criterion {pmc.MainCriterianId}: {score:F3}");
+                    total += score;
+                }
+
+                debug.AppendLine($"TOTAL: {total:F3}");
+                return debug.ToString();
+            }
         }
     }
-
-
 
 
     public class ProjectSubCriterian

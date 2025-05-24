@@ -28,7 +28,6 @@ namespace AymanProject.Controllers
 
             return View(projects);
         }
-
         // GET: Projects/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -51,7 +50,145 @@ namespace AymanProject.Controllers
                 return NotFound();
             }
 
+            // Add debug information for troubleshooting (optional - remove in production)
+            if (HttpContext.Request.Query.ContainsKey("debug"))
+            {
+                ViewData["ShowDebug"] = "true";
+
+                // Log calculation details for debugging
+                var debugInfo = new System.Text.StringBuilder();
+                debugInfo.AppendLine($"=== PROJECT DETAILS CALCULATION DEBUG ===");
+                debugInfo.AppendLine($"Project: {project.Title}");
+                debugInfo.AppendLine($"Main Criteria Count: {project.ProjectMainCriterians?.Count ?? 0}");
+
+                if (project.ProjectMainCriterians?.Any() == true)
+                {
+                    double manualTotal = 0;
+                    foreach (var pmc in project.ProjectMainCriterians)
+                    {
+                        var score = pmc.CalculateScore();
+                        debugInfo.AppendLine($"Main {pmc.MainCriterianId}: {score:F3}");
+                        manualTotal += score;
+                    }
+
+                    debugInfo.AppendLine($"Manual Total: {manualTotal:F3}");
+                    debugInfo.AppendLine($"TotalScore Property: {project.TotalScore:F3}");
+                    debugInfo.AppendLine($"Match: {Math.Abs((project.TotalScore ?? 0) - manualTotal) < 0.001}");
+                }
+
+                // Log to console/debug output
+                System.Diagnostics.Debug.WriteLine(debugInfo.ToString());
+
+                // You could also pass this to the view for display
+                ViewData["DebugInfo"] = debugInfo.ToString();
+            }
+
             return View(project);
+        }
+
+        // Add a specific debug endpoint for detailed calculation verification
+        [HttpGet]
+        public async Task<IActionResult> DebugProjectCalculation(int id)
+        {
+            var project = await _context.Projects
+                .Include(p => p.ProjectMainCriterians)
+                    .ThenInclude(pmc => pmc.MainCriterian)
+                .Include(p => p.ProjectMainCriterians)
+                    .ThenInclude(pmc => pmc.ProjectSubCriterians)
+                        .ThenInclude(psc => psc.SubCriterian)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (project == null)
+                return NotFound("Project not found");
+
+            var debugInfo = new
+            {
+                ProjectId = project.Id,
+                ProjectTitle = project.Title,
+                MainCriteriaCount = project.ProjectMainCriterians?.Count ?? 0,
+
+                // Current TotalScore property value
+                CurrentTotalScore = project.TotalScore,
+
+                // Manual calculation
+                ManualCalculation = project.ProjectMainCriterians?.Select(pmc => new
+                {
+                    MainCriterionId = pmc.MainCriterianId,
+                    MainCriterionName = pmc.MainCriterian.Text_En,
+                    MainWeight = pmc.MainCriterian.Weight,
+                    MainEvaluation = pmc.UserEvaluation,
+                    CalculateScoreResult = pmc.CalculateScore(),
+                    SubCriteriaCount = pmc.ProjectSubCriterians?.Count ?? 0,
+                    SubCriteriaDetails = pmc.ProjectSubCriterians?.Select(psc => new
+                    {
+                        SubCriterionName = psc.SubCriterian.Text_En,
+                        SubWeight = psc.SubCriterian.Weight,
+                        SubEvaluation = psc.UserEvaluation,
+                        IndividualScore = (pmc.MainCriterian.Weight * pmc.UserEvaluation) * (psc.SubCriterian.Weight * psc.UserEvaluation) / 100.0
+                    }).ToList()
+                }).ToList(),
+
+                // Verification
+                ManualTotal = project.ProjectMainCriterians?.Sum(pmc => pmc.CalculateScore()) ?? 0,
+                TotalScorePropertyValue = project.TotalScore ?? 0,
+                ValuesMatch = Math.Abs((project.TotalScore ?? 0) - (project.ProjectMainCriterians?.Sum(pmc => pmc.CalculateScore()) ?? 0)) < 0.001,
+
+                // Recommendations
+                Recommendations = new List<string>
+        {
+            project.TotalScore == null ? "❌ TotalScore is null - no evaluations found" : "✅ TotalScore has value",
+            (project.ProjectMainCriterians?.Count ?? 0) == 0 ? "❌ No main criteria found" : $"✅ Found {project.ProjectMainCriterians.Count} main criteria",
+            Math.Abs((project.TotalScore ?? 0) - (project.ProjectMainCriterians?.Sum(pmc => pmc.CalculateScore()) ?? 0)) < 0.001 ?
+                "✅ Calculation is correct" : "❌ Calculation mismatch - check TotalScore property"
+        }
+            };
+
+            return Json(debugInfo);
+        }
+
+        // Add method to recalculate and fix any calculation issues
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RecalculateScore(int id)
+        {
+            try
+            {
+                var project = await _context.Projects
+                    .Include(p => p.ProjectMainCriterians)
+                        .ThenInclude(pmc => pmc.MainCriterian)
+                    .Include(p => p.ProjectMainCriterians)
+                        .ThenInclude(pmc => pmc.ProjectSubCriterians)
+                            .ThenInclude(psc => psc.SubCriterian)
+                    .FirstOrDefaultAsync(p => p.Id == id);
+
+                if (project == null)
+                {
+                    return NotFound();
+                }
+
+                // The TotalScore is calculated automatically via the property
+                // No need to save anything to database as it's a computed property
+
+                var recalculatedScore = project.TotalScore;
+                var manualTotal = project.ProjectMainCriterians?.Sum(pmc => pmc.CalculateScore()) ?? 0;
+
+                TempData["SuccessMessage"] = CurrentLanguage == "ar"
+                    ? $"تم إعادة حساب النتيجة: {recalculatedScore:F3}%"
+                    : $"Score recalculated: {recalculatedScore:F3}%";
+
+                // Log for verification
+                System.Diagnostics.Debug.WriteLine($"Recalculated - Property: {recalculatedScore:F3}, Manual: {manualTotal:F3}");
+
+                return RedirectToActionWithLang(nameof(Details), routeValues: new { id = id });
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = CurrentLanguage == "ar"
+                    ? "حدث خطأ أثناء إعادة الحساب"
+                    : "An error occurred while recalculating";
+
+                return RedirectToActionWithLang(nameof(Details), routeValues: new { id = id });
+            }
         }
 
         // GET: Projects/Create
@@ -371,5 +508,48 @@ namespace AymanProject.Controllers
         {
             return _context.Projects.Any(e => e.Id == id);
         }
+
+        // Alternative: Add a specific debug endpoint
+        [HttpGet]
+        public IActionResult VerifyCalculation(int id)
+        {
+            var project = _context.Projects
+                .Include(p => p.ProjectMainCriterians)
+                    .ThenInclude(pmc => pmc.MainCriterian)
+                .Include(p => p.ProjectMainCriterians)
+                    .ThenInclude(pmc => pmc.ProjectSubCriterians)
+                        .ThenInclude(psc => psc.SubCriterian)
+                .FirstOrDefault(p => p.Id == id);
+
+            if (project == null)
+                return Json(new { error = "Project not found" });
+
+            var result = new
+            {
+                ProjectTitle = project.Title,
+                TotalScoreProperty = project.TotalScore,
+                MainCriteriaCount = project.ProjectMainCriterians.Count,
+                MainCriteriaScores = project.ProjectMainCriterians.Select(pmc => new
+                {
+                    MainCriterionId = pmc.MainCriterianId,
+                    MainCriterionName = pmc.MainCriterian.Text_En,
+                    MainWeight = pmc.MainCriterian.Weight,
+                    MainEvaluation = pmc.UserEvaluation,
+                    CalculatedScore = pmc.CalculateScore(),
+                    SubCriteriaCount = pmc.ProjectSubCriterians.Count,
+                    SubCriteriaDetails = pmc.ProjectSubCriterians.Select(psc => new
+                    {
+                        SubCriterionName = psc.SubCriterian.Text_En,
+                        SubWeight = psc.SubCriterian.Weight,
+                        SubEvaluation = psc.UserEvaluation,
+                        IndividualScore = (pmc.MainCriterian.Weight * pmc.UserEvaluation) * (psc.SubCriterian.Weight * psc.UserEvaluation) / 100.0
+                    }).ToList()
+                }).ToList(),
+                ManualCalculatedTotal = project.ProjectMainCriterians.Sum(pmc => pmc.CalculateScore())
+            };
+
+            return Json(result);
+        }
     }
+
 }
