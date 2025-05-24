@@ -4,7 +4,7 @@ using AymanProject.Models;
 
 namespace AymanProject.Controllers
 {
-    public class MainCriteriansController : Controller
+    public class MainCriteriansController : BaseController
     {
         private readonly EvaluationContext _context;
 
@@ -16,16 +16,11 @@ namespace AymanProject.Controllers
         // GET: MainCriterians
         public async Task<IActionResult> Index()
         {
-            //using (var context = new EvaluationContext())
-            //{
-            //    DatabaseInitializer.Initialize(context);
-            //    Console.WriteLine("Database created and seeded successfully.");
-            //}
             return View(await _context.MainCriterians.ToListAsync());
         }
 
         // GET: MainCriterians/Details/5
-        public async Task<IActionResult> Details(int? id, string lang = "en")
+        public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
             {
@@ -33,7 +28,7 @@ namespace AymanProject.Controllers
             }
 
             var mainCriterian = await _context.MainCriterians
-                .Include(m => m.SubCriterians) // Include sub-criterians
+                .Include(m => m.SubCriterians)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (mainCriterian == null)
@@ -41,7 +36,6 @@ namespace AymanProject.Controllers
                 return NotFound();
             }
 
-            ViewData["Lang"] = lang;
             return View(mainCriterian);
         }
 
@@ -52,8 +46,6 @@ namespace AymanProject.Controllers
         }
 
         // POST: MainCriterians/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Text_Ar,Text_En,Weight")] MainCriterian mainCriterian)
@@ -64,6 +56,7 @@ namespace AymanProject.Controllers
             {
                 _context.Add(mainCriterian);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Main criterian created successfully";
                 return RedirectToAction(nameof(Index));
             }
             return View(mainCriterian);
@@ -86,8 +79,6 @@ namespace AymanProject.Controllers
         }
 
         // POST: MainCriterians/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Text_Ar,Text_En,Weight")] MainCriterian mainCriterian)
@@ -104,6 +95,7 @@ namespace AymanProject.Controllers
                 {
                     _context.Update(mainCriterian);
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Main criterian updated successfully";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -148,9 +140,10 @@ namespace AymanProject.Controllers
             if (mainCriterian != null)
             {
                 _context.MainCriterians.Remove(mainCriterian);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Main criterian deleted successfully";
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

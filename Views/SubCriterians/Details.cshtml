@@ -1,42 +1,149 @@
 ﻿@model AymanProject.Models.SubCriterian
+@using AymanProject.Models
 
 @{
     ViewData["Title"] = "Details";
+    var lang = ViewData["Lang"]?.ToString() ?? "en";
+    bool isArabic = (bool)(ViewData["IsArabic"] ?? false);
 }
 
-<h1>Details</h1>
+<div class="container mt-4" dir="@(isArabic ? "rtl" : "ltr")">
+    <div class="card shadow">
+        <div class="card-header bg-info text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="card-title mb-0">
+                        @TranslationHelper.Translate("SubCriterianDetails", lang)
+                    </h3>
+                    @if (Model.MainCriterian != null)
+                    {
+                        <small class="text-light">
+                            @(isArabic ? "للمعيار الرئيسي: " : "For Main Criterian: ")
+                            @(isArabic ? Model.MainCriterian.Text_Ar : Model.MainCriterian.Text_En)
+                        </small>
+                    }
+                </div>
+                
+                <!-- Language Switcher -->
+                <div class="btn-group">
+                    <a href="?lang=en" class="btn btn-sm @(lang == "en" ? "btn-light" : "btn-outline-light")">
+                        @TranslationHelper.Translate("English", lang)
+                    </a>
+                    <a href="?lang=ar" class="btn btn-sm @(lang == "ar" ? "btn-light" : "btn-outline-light")">
+                        @TranslationHelper.Translate("Arabic", lang)
+                    </a>
+                </div>
+            </div>
+        </div>
 
-<div>
-    <h4>SubCriterian</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.MainId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.MainId)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Text_Ar)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Text_Ar)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Text_En)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Text_En)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Weight)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Weight)
-        </dd>
-    </dl>
+        <div class="card-body">
+            <!-- Main Criterian Info -->
+            @if (Model.MainCriterian != null)
+            {
+                <div class="alert alert-primary" role="alert">
+                    <h5 class="alert-heading">
+                        <i class="bi bi-info-circle"></i> @TranslationHelper.Translate("MainCriterianId", lang)
+                    </h5>
+                    <p class="mb-0">
+                        <strong>@(isArabic ? Model.MainCriterian.Text_Ar : Model.MainCriterian.Text_En)</strong>
+                        <span class="badge bg-secondary ms-2">@TranslationHelper.Translate("Weight", lang): @Model.MainCriterian.Weight.ToString("0.000")</span>
+                    </p>
+                </div>
+            }
+
+            <!-- Sub Criterian Details -->
+            <div class="row">
+                <div class="col-md-8">
+                    <dl class="row">
+                        <dt class="col-sm-4">@TranslationHelper.Translate("ID", lang):</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-primary">@Model.Id</span>
+                        </dd>
+
+                        <dt class="col-sm-4">@TranslationHelper.Translate("TextArabic", lang):</dt>
+                        <dd class="col-sm-8">
+                            <div class="border-bottom pb-2">@Model.Text_Ar</div>
+                        </dd>
+
+                        <dt class="col-sm-4">@TranslationHelper.Translate("TextEnglish", lang):</dt>
+                        <dd class="col-sm-8">
+                            <div class="border-bottom pb-2">@Model.Text_En</div>
+                        </dd>
+
+                        <dt class="col-sm-4">@TranslationHelper.Translate("Weight", lang):</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-success fs-6">@Model.Weight.ToString("0.000")</span>
+                            <small class="text-muted ms-2">(@((Model.Weight * 100).ToString("0.0"))%)</small>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-4">
+                    <!-- Quick Stats or Additional Info -->
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h6 class="card-title">@(isArabic ? "معلومات إحصائية" : "Quick Stats")</h6>
+                            <div class="mb-2">
+                                <small class="text-muted">@TranslationHelper.Translate("Weight", lang)</small>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: @((Model.Weight * 100).ToString("0.0"))%" 
+                                         aria-valuenow="@((Model.Weight * 100).ToString("0.0"))" 
+                                         aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <small>@((Model.Weight * 100).ToString("0.0"))%</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a asp-action="Details" asp-controller="MainCriterians" asp-route-id="@Model.MainId" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> @TranslationHelper.Translate("BackToMainCriterian", lang)
+                    </a>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-list"></i> @TranslationHelper.Translate("BackToList", lang)
+                    </a>
+                </div>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i> @TranslationHelper.Translate("Edit", lang)
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> @TranslationHelper.Translate("Delete", lang)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+
+@section Styles {
+    <style>
+        .border-bottom {
+            border-bottom: 1px solid #dee2e6 !important;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .progress {
+            background-color: #e9ecef;
+        }
+        
+        .card-footer .btn {
+            margin: 0 2px;
+        }
+        
+        @if (isArabic) {
+            <text>
+            .btn-group {
+                direction: ltr;
+            }
+            </text>
+        }
+    </style>
+}

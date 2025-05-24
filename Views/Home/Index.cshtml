@@ -1,7 +1,7 @@
 ﻿@{
     ViewData["Title"] = "Home";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var lang = Context.Items["Lang"]?.ToString() ?? "en";
+    var lang = Context.Items["Lang"]?.ToString() ?? ViewData["Lang"]?.ToString() ?? "en";
     bool isArabic = lang == "ar";
 }
 
@@ -37,18 +37,27 @@
         Prof. Dr. Mohammed Neamah Ahmed
     </p>
 
-    <div class="d-flex justify-content-center gap-3">
-        <a href="@Url.Action("Index", "Home", new { lang = "en" })" class="btn btn-primary">
-            English
-        </a>
-        <a href="@Url.Action("Index", "Home", new { lang = "ar" })" class="btn btn-success">
-            العربية
-        </a>
+    <!-- Language Selection -->
+    <div class="d-flex justify-content-center gap-3 mb-4">
+        <form asp-action="SetLanguage" asp-controller="Home" method="post" style="display: inline;">
+            <input type="hidden" name="lang" value="en" />
+            <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+            <button type="submit" class="btn @(lang == "en" ? "btn-primary" : "btn-outline-primary")">
+                English
+            </button>
+        </form>
+        <form asp-action="SetLanguage" asp-controller="Home" method="post" style="display: inline;">
+            <input type="hidden" name="lang" value="ar" />
+            <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+            <button type="submit" class="btn @(lang == "ar" ? "btn-success" : "btn-outline-success")">
+                العربية
+            </button>
+        </form>
     </div>
 
-
+    <!-- Enter Button -->
     <div class="mt-4">
-        <a href="@Url.Action("Index", "Projects" , new { lang = lang })" class="btn btn-outline-dark btn-lg">
+        <a href="@Url.Action("Index", "Projects", new { lang = lang })" class="btn btn-outline-dark btn-lg">
             @(isArabic ? "دخول" : "Enter")
         </a>
     </div>

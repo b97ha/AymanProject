@@ -4,7 +4,7 @@ using AymanProject.Models;
 
 namespace AymanProject.Controllers
 {
-    public class SubCriteriansController : Controller
+    public class SubCriteriansController : BaseController
     {
         private readonly EvaluationContext _context;
 
@@ -16,7 +16,10 @@ namespace AymanProject.Controllers
         // GET: SubCriterians
         public async Task<IActionResult> Index()
         {
-            return View(await _context.SubCriterians.ToListAsync());
+            var subCriterians = await _context.SubCriterians
+                .Include(s => s.MainCriterian)
+                .ToListAsync();
+            return View(subCriterians);
         }
 
         // GET: SubCriterians/Details/5
@@ -28,6 +31,7 @@ namespace AymanProject.Controllers
             }
 
             var subCriterian = await _context.SubCriterians
+                .Include(s => s.MainCriterian)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (subCriterian == null)
             {
@@ -38,16 +42,20 @@ namespace AymanProject.Controllers
         }
 
         // GET: SubCriterians/Create
-        public IActionResult Create(int mainId)
+        public async Task<IActionResult> Create(int mainId)
         {
+            var mainCriterian = await _context.MainCriterians.FindAsync(mainId);
+            if (mainCriterian == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.MainCriterian = mainCriterian;
             var subCriterian = new SubCriterian { MainId = mainId };
             return View(subCriterian);
         }
 
         // POST: SubCriterians/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("MainId,Text_Ar,Text_En,Weight")] SubCriterian subCriterian)
@@ -58,11 +66,16 @@ namespace AymanProject.Controllers
             {
                 _context.Add(subCriterian);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Sub criterian created successfully";
                 return RedirectToAction("Details", "MainCriterians", new { id = subCriterian.MainId });
             }
+
+            // If we got this far, something failed, reload the main criterian
+            var mainCriterian = await _context.MainCriterians.FindAsync(subCriterian.MainId);
+            ViewBag.MainCriterian = mainCriterian;
             return View(subCriterian);
         }
-     
+
         // GET: SubCriterians/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
@@ -71,7 +84,9 @@ namespace AymanProject.Controllers
                 return NotFound();
             }
 
-            var subCriterian = await _context.SubCriterians.FindAsync(id);
+            var subCriterian = await _context.SubCriterians
+                .Include(s => s.MainCriterian)
+                .FirstOrDefaultAsync(s => s.Id == id);
             if (subCriterian == null)
             {
                 return NotFound();
@@ -80,11 +95,9 @@ namespace AymanProject.Controllers
         }
 
         // POST: SubCriterians/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,MainId,Text_Ar,Text_En,Weight")] SubCriterian subCriterian, string lang = "en")
+        public async Task<IActionResult> Edit(int id, [Bind("Id,MainId,Text_Ar,Text_En,Weight")] SubCriterian subCriterian)
         {
             if (id != subCriterian.Id)
             {
@@ -98,6 +111,7 @@ namespace AymanProject.Controllers
                 {
                     _context.Update(subCriterian);
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Sub criterian updated successfully";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -112,6 +126,10 @@ namespace AymanProject.Controllers
                 }
                 return RedirectToAction("Details", "MainCriterians", new { id = subCriterian.MainId });
             }
+
+            // If we got this far, something failed, reload the main criterian
+            var mainCriterian = await _context.MainCriterians.FindAsync(subCriterian.MainId);
+            ViewBag.MainCriterian = mainCriterian;
             return View(subCriterian);
         }
 
@@ -124,6 +142,7 @@ namespace AymanProject.Controllers
             }
 
             var subCriterian = await _context.SubCriterians
+                .Include(s => s.MainCriterian)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (subCriterian == null)
             {
@@ -141,11 +160,14 @@ namespace AymanProject.Controllers
             var subCriterian = await _context.SubCriterians.FindAsync(id);
             if (subCriterian != null)
             {
+                var mainId = subCriterian.MainId;
                 _context.SubCriterians.Remove(subCriterian);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Sub criterian deleted successfully";
+                return RedirectToAction("Details", "MainCriterians", new { id = mainId });
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction("Details", "MainCriterians", new { id = subCriterian.MainId });
+            return RedirectToAction("Index", "MainCriterians");
         }
 
         private bool SubCriterianExists(int id)

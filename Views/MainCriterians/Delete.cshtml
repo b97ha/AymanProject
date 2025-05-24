@@ -1,39 +1,77 @@
 ﻿@model AymanProject.Models.MainCriterian
+@using AymanProject.Models
 
 @{
     ViewData["Title"] = "Delete";
+    var lang = ViewData["Lang"]?.ToString() ?? "en";
+    bool isArabic = (bool)(ViewData["IsArabic"] ?? false);
 }
 
-<h1>Delete</h1>
+<div class="container mt-4" dir="@(isArabic ? "rtl" : "ltr")">
+    <div class="card shadow border-danger">
+        <div class="card-header bg-danger text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0">
+                    @TranslationHelper.Translate("Delete", lang) @TranslationHelper.Translate("MainCriterians", lang)
+                </h3>
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>MainCriterian</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Text_Ar)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Text_Ar)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Text_En)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Text_En)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Weight)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Weight)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+                <!-- Language Switcher -->
+                <div class="btn-group">
+                    <a href="?lang=en" class="btn btn-sm @(lang == "en" ? "btn-light" : "btn-outline-light")">
+                        @TranslationHelper.Translate("English", lang)
+                    </a>
+                    <a href="?lang=ar" class="btn btn-sm @(lang == "ar" ? "btn-light" : "btn-outline-light")">
+                        @TranslationHelper.Translate("Arabic", lang)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- Warning Message -->
+            <div class="alert alert-warning" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <strong>@TranslationHelper.Translate("AreYouSureDelete", lang)</strong>
+            </div>
+
+            <!-- Item Details -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">@TranslationHelper.Translate("Details", lang)</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">@TranslationHelper.Translate("TextArabic", lang):</dt>
+                        <dd class="col-sm-9">@Model.Text_Ar</dd>
+
+                        <dt class="col-sm-3">@TranslationHelper.Translate("TextEnglish", lang):</dt>
+                        <dd class="col-sm-9">@Model.Text_En</dd>
+
+                        <dt class="col-sm-3">@TranslationHelper.Translate("Weight", lang):</dt>
+                        <dd class="col-sm-9">@Model.Weight.ToString("0.000")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" asp-route-lang="@lang" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> @TranslationHelper.Translate("BackToList", lang)
+                </a>
+                <div>
+                    <a asp-action="Details" asp-route-id="@Model.Id" asp-route-lang="@lang" class="btn btn-info">
+                        <i class="bi bi-info-circle"></i> @TranslationHelper.Translate("Details", lang)
+                    </a>
+                    <form asp-action="Delete" method="post" style="display: inline;"
+                          onsubmit="return confirm('@TranslationHelper.Translate("AreYouSureDelete", lang)')">
+                        <input type="hidden" asp-for="Id" />
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> @TranslationHelper.Translate("ConfirmDelete", lang)
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

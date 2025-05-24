@@ -1,44 +1,96 @@
 ﻿@model AymanProject.Models.MainCriterian
+@using AymanProject.Models
 
 @{
     ViewData["Title"] = "Edit";
+    var lang = ViewData["Lang"]?.ToString() ?? "en";
+    bool isArabic = (bool)(ViewData["IsArabic"] ?? false);
 }
 
-<h1>Edit</h1>
+<div class="container mt-4" dir="@(isArabic ? "rtl" : "ltr")">
+    <div class="card shadow">
+        <div class="card-header bg-warning text-dark">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0">
+                    @TranslationHelper.Translate("Edit", lang) @TranslationHelper.Translate("MainCriterians", lang)
+                </h3>
 
-<h4>MainCriterian</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Text_Ar" class="control-label"></label>
-                <input asp-for="Text_Ar" class="form-control" />
-                <span asp-validation-for="Text_Ar" class="text-danger"></span>
+                <!-- Language Switcher -->
+                <div class="btn-group">
+                    <a href="?lang=en" class="btn btn-sm @(lang == "en" ? "btn-dark" : "btn-outline-dark")">
+                        @TranslationHelper.Translate("English", lang)
+                    </a>
+                    <a href="?lang=ar" class="btn btn-sm @(lang == "ar" ? "btn-dark" : "btn-outline-dark")">
+                        @TranslationHelper.Translate("Arabic", lang)
+                    </a>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Text_En" class="control-label"></label>
-                <input asp-for="Text_En" class="form-control" />
-                <span asp-validation-for="Text_En" class="text-danger"></span>
+        </div>
+
+        <div class="card-body">
+            <form asp-action="Edit" id="edit-form">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <input type="hidden" asp-for="Id" />
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Text_Ar" class="control-label fw-bold">
+                                @TranslationHelper.Translate("TextArabic", lang)
+                            </label>
+                            <input asp-for="Text_Ar" class="form-control" placeholder="@(isArabic ? "أدخل النص بالعربية" : "Enter Arabic text")" />
+                            <span asp-validation-for="Text_Ar" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Text_En" class="control-label fw-bold">
+                                @TranslationHelper.Translate("TextEnglish", lang)
+                            </label>
+                            <input asp-for="Text_En" class="form-control" placeholder="@(isArabic ? "أدخل النص بالإنجليزية" : "Enter English text")" />
+                            <span asp-validation-for="Text_En" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label asp-for="Weight" class="control-label fw-bold">
+                                @TranslationHelper.Translate("Weight", lang)
+                            </label>
+                            <input asp-for="Weight" class="form-control" type="number" step="0.001" min="0" max="1"
+                                   placeholder="@(isArabic ? "مثال: 0.269" : "Example: 0.269")" />
+                            <span asp-validation-for="Weight" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                @(isArabic ? "قيمة بين 0 و 1" : "Value between 0 and 1")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> @TranslationHelper.Translate("BackToList", lang)
+                </a>
+                <div>
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info">
+                        <i class="bi bi-info-circle"></i> @TranslationHelper.Translate("Details", lang)
+                    </a>
+                    <button type="submit" form="edit-form" class="btn btn-warning">
+                        <i class="bi bi-check-circle"></i> @TranslationHelper.Translate("Save", lang)
+                    </button>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Weight" class="control-label"></label>
-                <input asp-for="Weight" class="form-control" />
-                <span asp-validation-for="Weight" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

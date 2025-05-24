@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AymanProject.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : BaseController
     {
         private readonly ILogger<HomeController> _logger;
 
@@ -13,16 +13,8 @@ namespace AymanProject.Controllers
             _logger = logger;
         }
 
-        public IActionResult Index(string lang = "en")
+        public IActionResult Index()
         {
-            if (!string.IsNullOrEmpty(lang))
-            {
-                Response.Cookies.Append("Lang", lang, new CookieOptions
-                {
-                    Expires = DateTime.Now.AddYears(1),
-                    IsEssential = true
-                });
-            }
             return View();
         }
 
