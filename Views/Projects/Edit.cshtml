@@ -1,63 +1,131 @@
 ﻿@model AymanProject.Models.Project
+@using AymanProject.Models
 
 @{
     ViewData["Title"] = "Edit";
-    var lang = Context.Items["Lang"]?.ToString() ?? "en";
-    bool isArabic = lang == "ar";
-
+    var lang = ViewData["Lang"]?.ToString() ?? "en";
+    bool isArabic = (bool)(ViewData["IsArabic"] ?? false);
 }
 
 <div class="container mt-4" dir="@(isArabic ? "rtl" : "ltr")">
-    <h1>@(isArabic ? "تعديل المشروع" : "Edit Project")</h1>
+    <!-- Success/Error Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
-    <hr />
-    <div class="row">
-        <div class="col-md-6">
-            <form asp-action="Edit" asp-route-lang="@lang">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow">
+        <div class="card-header bg-warning text-dark">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0">
+                    @TranslationHelper.Translate("Edit", lang) @TranslationHelper.Translate("Projects", lang)
+                </h3>
+
+                <!-- Language Switcher -->
+                <div class="btn-group">
+                    <a href="?lang=en" class="btn btn-sm @(lang == "en" ? "btn-dark" : "btn-outline-dark")">
+                        @TranslationHelper.Translate("English", lang)
+                    </a>
+                    <a href="?lang=ar" class="btn btn-sm @(lang == "ar" ? "btn-dark" : "btn-outline-dark")">
+                        @TranslationHelper.Translate("Arabic", lang)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <form asp-action="Edit" method="post" id="edit-form">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                 <input type="hidden" asp-for="Id" />
 
-                <div class="form-group mb-3">
-                    <label asp-for="Title" class="control-label"></label>
-                    <input asp-for="Title" class="form-control" />
-                    <span asp-validation-for="Title" class="text-danger"></span>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Title" class="control-label fw-bold">
+                                @TranslationHelper.Translate("Title", lang) <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Title" class="form-control"
+                                   placeholder="@(isArabic ? "أدخل عنوان المشروع" : "Enter project title")" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Location" class="control-label fw-bold">
+                                @TranslationHelper.Translate("Location", lang) <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Location" class="form-control"
+                                   placeholder="@(isArabic ? "أدخل موقع المشروع" : "Enter project location")" />
+                            <span asp-validation-for="Location" class="text-danger"></span>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="Location" class="control-label"></label>
-                    <input asp-for="Location" class="form-control" />
-                    <span asp-validation-for="Location" class="text-danger"></span>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="control-label fw-bold">
+                                @TranslationHelper.Translate("Description", lang) <span class="text-danger">*</span>
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="4"
+                                      placeholder="@(isArabic ? "أدخل وصف المشروع" : "Enter project description")"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="Description" class="control-label"></label>
-                    <input asp-for="Description" class="form-control" />
-                    <span asp-validation-for="Description" class="text-danger"></span>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label asp-for="SubmittedOn" class="control-label"></label>
-                    <input asp-for="SubmittedOn" class="form-control" />
-                    <span asp-validation-for="SubmittedOn" class="text-danger"></span>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label asp-for="EndOn" class="control-label"></label>
-                    <input asp-for="EndOn" class="form-control" />
-                    <span asp-validation-for="EndOn" class="text-danger"></span>
-                </div>
-
-                <div class="form-group">
-                    <input type="submit" value="@(isArabic ? "حفظ" : "Save")" class="btn btn-primary" />
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="SubmittedOn" class="control-label fw-bold">
+                                @TranslationHelper.Translate("SubmittedOn", lang) <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="SubmittedOn" class="form-control" type="date" />
+                            <span asp-validation-for="SubmittedOn" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="EndOn" class="control-label fw-bold">
+                                @TranslationHelper.Translate("EndOn", lang) <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="EndOn" class="form-control" type="date" />
+                            <span asp-validation-for="EndOn" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                @(isArabic ? "يجب أن يكون تاريخ الانتهاء بعد تاريخ التقديم" : "End date must be after submitted date")
+                            </small>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
-    </div>
 
-    <div class="mt-3">
-        <a asp-action="Index" asp-route-lang="@lang" class="btn btn-secondary">
-            @(isArabic ? "رجوع إلى القائمة" : "Back to List")
-        </a>
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> @TranslationHelper.Translate("BackToList", lang)
+                </a>
+                <div>
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info">
+                        <i class="bi bi-info-circle"></i> @TranslationHelper.Translate("Details", lang)
+                    </a>
+                    <button type="submit" form="edit-form" class="btn btn-warning">
+                        <i class="bi bi-check-circle"></i> @TranslationHelper.Translate("Save", lang)
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -65,4 +133,28 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        $(document).ready(function() {
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+
+            // Form validation and submission
+            $('#edit-form').on('submit', function(e) {
+                if (!this.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+
+                $(this).addClass('was-validated');
+
+                // Show loading state
+                var submitBtn = $(this).find('button[type="submit"]');
+                submitBtn.prop('disabled', true)
+                         .html('<i class="bi bi-hourglass-split"></i> @(isArabic ? "جاري الحفظ..." : "Saving...")');
+            });
+        });
+    </script>
 }

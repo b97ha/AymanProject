@@ -8,6 +8,23 @@
 }
 
 <div class="container mt-4" dir="@(isArabic ? "rtl" : "ltr")">
+    <!-- Success/Error Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
     <div class="card shadow">
         <div class="card-header bg-success text-white">
             <div class="d-flex justify-content-between align-items-center">
@@ -28,25 +45,43 @@
         </div>
 
         <div class="card-body">
-            <form asp-action="Create" asp-route-lang="@lang">
+            <form asp-action="Create" asp-route-lang="@lang" id="create-form" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group mb-3">
+                            <label asp-for="Id" class="control-label fw-bold">
+                                @TranslationHelper.Translate("ID", lang) <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Id" class="form-control" type="number" min="1" max="17"
+                                   placeholder="@(isArabic ? "1-17" : "1-17")" />
+                            <span asp-validation-for="Id" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                @(isArabic ? "أرقام أهداف التنمية المستدامة (1-17)" : "UN SDG Numbers (1-17)")
+                            </small>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group mb-3">
                             <label asp-for="Text_Ar" class="control-label fw-bold">
-                                @TranslationHelper.Translate("TextArabic", lang)
+                                @TranslationHelper.Translate("TextArabic", lang) <span class="text-danger">*</span>
                             </label>
-                            <input asp-for="Text_Ar" class="form-control" placeholder="@(isArabic ? "أدخل النص بالعربية" : "Enter Arabic text")" />
+                            <textarea asp-for="Text_Ar" class="form-control" rows="3"
+                                      placeholder="@(isArabic ? "أدخل النص بالعربية" : "Enter Arabic text")"></textarea>
                             <span asp-validation-for="Text_Ar" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group mb-3">
                             <label asp-for="Text_En" class="control-label fw-bold">
-                                @TranslationHelper.Translate("TextEnglish", lang)
+                                @TranslationHelper.Translate("TextEnglish", lang) <span class="text-danger">*</span>
                             </label>
-                            <input asp-for="Text_En" class="form-control" placeholder="@(isArabic ? "أدخل النص بالإنجليزية" : "Enter English text")" />
+                            <textarea asp-for="Text_En" class="form-control" rows="3"
+                                      placeholder="@(isArabic ? "أدخل النص بالإنجليزية" : "Enter English text")"></textarea>
                             <span asp-validation-for="Text_En" class="text-danger"></span>
                         </div>
                     </div>
@@ -56,7 +91,7 @@
                     <div class="col-md-4">
                         <div class="form-group mb-3">
                             <label asp-for="Weight" class="control-label fw-bold">
-                                @TranslationHelper.Translate("Weight", lang)
+                                @TranslationHelper.Translate("Weight", lang) <span class="text-danger">*</span>
                             </label>
                             <input asp-for="Weight" class="form-control" type="number" step="0.001" min="0" max="1"
                                    placeholder="@(isArabic ? "مثال: 0.269" : "Example: 0.269")" />
@@ -72,7 +107,7 @@
 
         <div class="card-footer bg-light">
             <div class="d-flex justify-content-between">
-                <a asp-action="Index" class="btn btn-secondary">
+                <a asp-action="Index" asp-route-lang="@lang" class="btn btn-secondary">
                     <i class="bi bi-arrow-left"></i> @TranslationHelper.Translate("BackToList", lang)
                 </a>
                 <button type="submit" form="create-form" class="btn btn-success">
@@ -87,9 +122,22 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-}
 
-<script>
-    // Add form id to the form for the submit button
-    document.querySelector('form').id = 'create-form';
-</script>
+    <script>
+        $(document).ready(function() {
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+
+            // Form validation feedback
+            $('#create-form').on('submit', function(e) {
+                if (!this.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                $(this).addClass('was-validated');
+            });
+        });
+    </script>
+}
